@@ -29,7 +29,7 @@ def robust_read_csv(src: str | Path) -> pd.DataFrame:
 # Default LOCAL file that lives inside the repo
 #   ☞  make sure you committed this file!
 # -----------------------------------------------------------------------
-DEFAULT_LOCAL = Path(__file__).parent / "data" / "cloud_kitchen_survey_descriptive.csv"
+DEFAULT_LOCAL = Path(__file__).parent / "cloud_kitchen_survey_descriptive.csv"
 
 # Sidebar – let power-users override the source
 with st.sidebar:
