@@ -1,46 +1,54 @@
-# app.py – main entry point
+# app.py  ── main entry point
 from pathlib import Path
+import requests
+import pandas as pd
 import streamlit as st
-from utils import load_data   # <- same helper you already have
+from io import StringIO
 
-st.set_page_config(page_title="Cloud Kitchen Dashboard",
-                   page_icon="🍲",
-                   layout="wide")
-
+st.set_page_config(page_title="Cloud Kitchen Dashboard", page_icon="🍲", layout="wide")
 st.title("Cloud-Kitchen Consumer Insights Dashboard")
 
-# ------------------------------------------------------------------
-# 1️⃣  Default LOCAL dataset path (relative to this file)
-# ------------------------------------------------------------------
+# -----------------------------------------------------------------------
+# Helper: robust CSV loader (works with local paths *and* URLs)
+# -----------------------------------------------------------------------
+@st.cache_data(show_spinner=False)
+def robust_read_csv(src: str | Path) -> pd.DataFrame:
+    src = str(src)                      # normalise type
+    try:
+        if src.startswith(("http://", "https://")):
+            r = requests.get(src, timeout=15)
+            r.raise_for_status()
+            return pd.read_csv(StringIO(r.text))
+        else:
+            return pd.read_csv(Path(src).expanduser())
+    except Exception as e:
+        st.error(f"❌ Failed to load **{src}** – {e}")
+        raise
+
+# -----------------------------------------------------------------------
+# Default LOCAL file that lives inside the repo
+#   ☞  make sure you committed this file!
+# -----------------------------------------------------------------------
 DEFAULT_LOCAL = Path(__file__).parent / "data" / "cloud_kitchen_survey_descriptive.csv"
 
-# ------------------------------------------------------------------
-# 2️⃣  Sidebar – allow user to override path/URL if they wish
-# ------------------------------------------------------------------
+# Sidebar – let power-users override the source
 with st.sidebar:
     st.markdown("### Data source")
-    csv_path = st.text_input(
-        label="CSV path or URL",
-        value=str(DEFAULT_LOCAL)  # 👈 pre-filled with the local file
+    csv_input = st.text_input(
+        "Local path or URL",
+        value=str(DEFAULT_LOCAL)        # pre-filled with the local file
     )
-
     if st.button("Reload data"):
-        # Clear any cached dataframe so the new path reloads
-        st.session_state.pop("df", None)
+        st.session_state.pop("df", None)  # clear cache
 
-# ------------------------------------------------------------------
-# 3️⃣  Lazy-load the dataframe (cached by utils.load_data)
-# ------------------------------------------------------------------
+# First load (cached thereafter)
 if "df" not in st.session_state:
-    st.session_state["df"] = load_data(csv_path)
+    st.session_state["df"] = robust_read_csv(csv_input)
 
 df = st.session_state["df"]
 
-# ------------------------------------------------------------------
-# 4️⃣  Basic confirmation / housekeeping
-# ------------------------------------------------------------------
-st.success(f"Loaded **{len(df):,} rows** from **{csv_path}**")
+st.success(f"Loaded **{len(df):,} rows** from **{csv_input}**")
 st.write(
-    "Use the navigation menu (≡ or ‘Pages’ pane) to explore visualisations, "
-    "classification, clustering, association rules, and regression insights."
+    "Use the left-hand Pages menu to explore visualisations, "
+    "classification, clustering, association rules, and regression tabs."
 )
