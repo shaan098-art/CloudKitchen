@@ -8,11 +8,11 @@ import pandas as pd
 st.header("Data Visualisation :bar_chart:")
 
 # ------------------------------------------------------------------
-# Get the dataframe loaded by app.py
+# Retrieve the dataframe loaded in app.py
 # ------------------------------------------------------------------
 df = st.session_state.get("df")
 if df is None:
-    st.error("Dataset not loaded – go back to the Home page first.")
+    st.error("Dataset not loaded – open the Home page first.")
     st.stop()
 
 # ------------------------------------------------------------------
@@ -35,7 +35,7 @@ filt_df = df[
 ]
 
 # ------------------------------------------------------------------
-# 1. Age distribution
+# 1. Age-Bracket distribution
 # ------------------------------------------------------------------
 st.subheader("1. Age-Bracket Distribution")
 fig1 = px.histogram(
@@ -48,16 +48,16 @@ fig1 = px.histogram(
 st.plotly_chart(fig1, use_container_width=True)
 
 # ------------------------------------------------------------------
-# 2. Diet-Style counts (ROBUST)
+# 2. Diet-Style counts  🛠  (robust)
 # ------------------------------------------------------------------
 st.subheader("2. Diet-Style Counts")
 
 style_counts = (
     filt_df["Q3_DietStyle"]
     .value_counts()
-    .sort_index()                     # keeps 1-6 order
-    .reset_index()
-    .rename(columns={"index": "DietStyle", "Q3_DietStyle": "Count"})
+    .sort_index()              # keeps codes 1-6 in order
+    .reset_index(name="Count") # FORCE second column to be 'Count'
+    .rename(columns={"index": "DietStyle"})
 )
 
 if style_counts.empty:
@@ -142,7 +142,7 @@ fig7 = px.box(
 st.plotly_chart(fig7, use_container_width=True)
 
 # ------------------------------------------------------------------
-# 8. Correlation heatmap of numeric columns
+# 8. Correlation heatmap (numeric)
 # ------------------------------------------------------------------
 st.subheader("8. Correlation Heatmap (numeric features)")
 num_df = filt_df.select_dtypes(include=["int", "float"])
@@ -159,26 +159,4 @@ else:
 # ------------------------------------------------------------------
 st.subheader("9. Spice-Level Distribution")
 fig9 = px.pie(
-    filt_df,
-    names="Q12_SpiceLevel",
-    title="Preferred Spice Level",
-)
-st.plotly_chart(fig9, use_container_width=True)
-
-# ------------------------------------------------------------------
-# 10. Loyalty-Perk preference
-# ------------------------------------------------------------------
-st.subheader("10. Loyalty-Perk Preference")
-perk_counts = (
-    filt_df["Q19_LoyaltyPerk"]
-    .value_counts()
-    .reset_index()
-    .rename(columns={"index": "Perk", "Q19_LoyaltyPerk": "Count"})
-)
-fig10 = px.bar(
-    perk_counts,
-    x="Perk",
-    y="Count",
-    labels={"Perk": "Preferred Perk", "Count": "Count"},
-)
-st.plotly_chart(fig10, use_container_width=True)
+    f
